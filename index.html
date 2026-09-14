@@ -138,9 +138,17 @@
   .restart button{font-family:'Space Grotesk', sans-serif; font-size:13px; background:none; border:none; color:var(--network); text-decoration:underline; cursor:pointer; padding:8px;}
 
   .disclaimer{margin-top:26px; font-size:11.5px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:14px;}
+
+  .watermark{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-28deg);
+    font-family:'Space Grotesk', sans-serif; font-size:clamp(36px, 12vw, 90px); font-weight:700;
+    color:rgba(24,36,32,0.07); letter-spacing:4px; white-space:nowrap;
+    pointer-events:none; user-select:none; z-index:9999;
+  }
 </style>
 </head>
 <body>
+<div class="watermark" aria-hidden="true">PROTOTYPE</div>
 <div class="app">
 
   <div class="masthead">
@@ -236,11 +244,17 @@
     <div class="step" data-key="ketel">
       <div class="step-label"></div>
       <h2>Waar hangt de huidige cv-ketel?</h2>
-      <div class="options" data-q="ketel">
+      <div class="options" data-q="ketel" id="ketelHuis">
         <button class="opt" data-min="0" data-max="500" data-meters="1"><span class="txt">Meterkast / entree</span><span class="amt">€0 – €500</span></button>
         <button class="opt" data-min="500" data-max="1500" data-meters="3"><span class="txt">Begane grond</span><span class="amt">€500 – €1.500</span></button>
         <button class="opt" data-min="1500" data-max="3000" data-meters="6"><span class="txt">1e verdieping</span><span class="amt">€1.500 – €3.000</span></button>
         <button class="opt" data-min="3000" data-max="6000" data-meters="10"><span class="txt">Zolder</span><span class="amt">€3.000 – €6.000</span></button>
+      </div>
+      <div class="options" data-q="ketel" id="ketelApp" style="display:none;">
+        <button class="opt" data-min="0" data-max="500" data-meters="1"><span class="txt">Zelfde ruimte als meterkast</span><span class="amt">€0 – €500</span></button>
+        <button class="opt" data-min="500" data-max="1500" data-meters="3"><span class="txt">Zelfde verdieping, andere ruimte</span><span class="amt">€500 – €1.500</span></button>
+        <button class="opt" data-min="1500" data-max="3000" data-meters="6"><span class="txt">Andere verdieping</span><span class="amt">€1.500 – €3.000</span></button>
+        <button class="opt" data-min="3000" data-max="6000" data-meters="10"><span class="txt">Andere verdieping, ver weg (bijv. via trappenhuis/schacht)</span><span class="amt">€3.000 – €6.000</span></button>
       </div>
     </div>
 
@@ -468,6 +482,20 @@
   function currentKey(){ return sequence[pos]; }
 
   function applyDifferentiation(key){
+    if(key==='ketel'){
+      const wt = answers.woningtype ? answers.woningtype.choice : undefined;
+      const isApp = wt === 'appartement';
+      const huisGroup = document.getElementById('ketelHuis');
+      const appGroup = document.getElementById('ketelApp');
+      const showGroup = isApp ? appGroup : huisGroup;
+      const hideGroup = isApp ? huisGroup : appGroup;
+      if(hideGroup.querySelector('.opt.selected')){
+        hideGroup.querySelectorAll('.opt.selected').forEach(b=>b.classList.remove('selected'));
+        delete answers.ketel;
+      }
+      huisGroup.style.display = isApp ? 'none' : '';
+      appGroup.style.display = isApp ? '' : 'none';
+    }
     if(key==='radiatoren'){
       const hint = document.getElementById('hintRadiatoren');
       const vw = answers.vloerverwarming;
@@ -522,8 +550,7 @@
   }
 
   function getMetersAttr(q){
-    const group = document.querySelector('.options[data-q="'+q+'"]');
-    const selected = group ? group.querySelector('.opt.selected') : null;
+    const selected = document.querySelector('.options[data-q="'+q+'"] .opt.selected');
     return selected ? parseFloat(selected.dataset.meters || 0) : 0;
   }
 
@@ -537,8 +564,8 @@
     document.getElementById('navBar').style.display='flex';
     const nextBtn = document.getElementById('nextBtn');
     nextBtn.textContent = (key==='leidingwerk') ? 'Bereken →' : 'Volgende →';
-    nextBtn.disabled = !canAdvance(key);
     applyDifferentiation(key);
+    nextBtn.disabled = !canAdvance(key);
     rebuildPipeline();
     updateRunning();
   }
