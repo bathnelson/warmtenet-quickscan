@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quickscan inpandige warmtenetkosten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#182420;
+    --paper:#F5F6F2;
+    --paper-raised:#FFFFFF;
+    --heat:#D9531E;
+    --heat-dim:#F0C6B2;
+    --network:#1F6F6B;
+    --warn:#B4530E;
+    --warn-bg:#FBEEE2;
+    --line:#D8DBD3;
+    --muted:#5C665F;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', system-ui, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:0 0 60px;
+  }
+  .app{width:100%; max-width:540px; padding:28px 20px 40px;}
+
+  .masthead{margin-bottom:22px;}
+  .masthead .kicker{font-family:'Space Grotesk', sans-serif; font-size:13px; color:var(--network); font-weight:600;}
+  .masthead h1{font-family:'Space Grotesk', sans-serif; font-size:26px; line-height:1.2; margin:4px 0 6px; font-weight:700;}
+  .masthead p{margin:0; color:var(--muted); font-size:14.5px; line-height:1.5; max-width:46ch;}
+
+  .pipeline{display:flex; gap:3px; margin:24px 0 26px;}
+  .pipeline .seg{flex:1; height:6px; background:var(--line); position:relative; overflow:hidden;}
+  .pipeline .seg.done{background:var(--heat);}
+  .pipeline .seg.current::after{content:""; position:absolute; inset:0; background:var(--heat); animation:flow 1.4s ease-in-out infinite;}
+  @keyframes flow{0%{transform:translateX(-100%);} 100%{transform:translateX(100%);}}
+
+  .card{background:var(--paper-raised); border:1px solid var(--line);}
+  .step{display:none;}
+  .step.active{display:block;}
+
+  .step-label{font-family:'Space Grotesk', sans-serif; font-size:12.5px; color:var(--muted); margin-bottom:6px;}
+  .step h2{font-family:'Space Grotesk', sans-serif; font-size:19px; font-weight:600; margin:0 0 6px; line-height:1.3;}
+  .step .hint{font-size:13.5px; color:var(--muted); line-height:1.5; margin:0 0 14px;}
+
+  .options{display:flex; flex-direction:column; gap:8px;}
+  .opt{
+    text-align:left; background:var(--paper-raised); border:1px solid var(--line); border-left:3px solid var(--line);
+    padding:13px 14px; font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:var(--ink); cursor:pointer;
+    display:flex; justify-content:space-between; align-items:center; gap:10px; transition:border-color .12s ease, background .12s ease;
+  }
+  .opt:hover{border-left-color:var(--network);}
+  .opt.selected{border-left-color:var(--heat); background:#FBF3EF;}
+  .opt .amt{font-family:'Space Grotesk', sans-serif; font-size:12px; color:var(--muted); white-space:nowrap; flex-shrink:0; text-align:right;}
+  .opt.selected .amt{color:var(--heat);}
+  .opt .txt{line-height:1.35;}
+
+  details.info{
+    margin:2px 0 16px;
+    border:1px solid var(--line);
+    background:#FBFBF9;
+  }
+  details.info summary{
+    list-style:none;
+    cursor:pointer;
+    padding:10px 12px;
+    font-family:'Space Grotesk', sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--network);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  details.info summary::-webkit-details-marker{display:none;}
+  details.info summary::before{content:"?"; display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border:1px solid var(--network); border-radius:50%; font-size:11px; flex-shrink:0;}
+  details.info[open] summary::before{content:"–";}
+  details.info .body{padding:0 14px 14px 34px; font-size:13px; line-height:1.6; color:var(--ink);}
+  details.info .body p{margin:0 0 10px;}
+  details.info .body ul{margin:0 0 10px; padding-left:18px;}
+  details.info .body li{margin-bottom:5px;}
+  details.info .body b{color:var(--ink);}
+
+  .slider-row{margin:6px 0 8px;}
+  .slider-row label{display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;}
+  .slider-row .val{font-family:'Space Grotesk', sans-serif; font-weight:600; color:var(--heat);}
+  input[type=range]{width:100%; accent-color:var(--heat);}
+
+  .select-row{margin-top:18px;}
+  .select-row label{display:block; font-size:14px; margin-bottom:8px; color:var(--muted);}
+  select{width:100%; padding:11px 12px; font-family:'IBM Plex Sans', sans-serif; font-size:14.5px; border:1px solid var(--line); background:var(--paper-raised); color:var(--ink);}
+
+  .nav{display:flex; justify-content:space-between; align-items:center; margin-top:22px; gap:10px;}
+  .nav button{font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600; padding:11px 16px; border:1px solid var(--ink); background:none; color:var(--ink); cursor:pointer; flex-shrink:0;}
+  .nav button.primary{background:var(--ink); color:var(--paper-raised);}
+  .nav button:disabled{opacity:0.3; cursor:default;}
+  .nav .ghost{border-color:transparent; color:var(--muted); padding-left:4px;}
+  .running{font-size:12.5px; color:var(--muted); text-align:right; flex:1;}
+  .running .num{font-family:'Space Grotesk', sans-serif; color:var(--ink); font-weight:600; display:block;}
+
+  .result h2{font-family:'Space Grotesk', sans-serif; font-size:19px; margin:0 0 4px;}
+  .result .sub{color:var(--muted); font-size:13.5px; margin-bottom:22px;}
+  .estimate{padding:22px 20px; background:var(--ink); color:var(--paper);}
+  .estimate .tag{font-family:'Space Grotesk', sans-serif; font-size:12px; color:var(--heat-dim); margin-bottom:8px;}
+  .estimate .range{font-family:'Space Grotesk', sans-serif; font-size:30px; font-weight:700; line-height:1.15;}
+  .estimate .note{font-size:12.5px; color:#B9C2BC; margin-top:10px; line-height:1.5;}
+
+  .flags{margin-top:18px;}
+  .flag{background:var(--warn-bg); border-left:3px solid var(--warn); padding:12px 14px; font-size:13px; line-height:1.55; margin-bottom:8px;}
+  .flag b{display:block; font-family:'Space Grotesk', sans-serif; font-size:13px; color:var(--warn); margin-bottom:4px;}
+
+  .breakdown{margin-top:22px;}
+  .breakdown h3{font-family:'Space Grotesk', sans-serif; font-size:14px; margin:0 0 10px; color:var(--muted); font-weight:600;}
+  .bd-row{display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:13.5px; gap:12px;}
+  .bd-row .lbl{color:var(--ink);}
+  .bd-row .v{font-family:'Space Grotesk', sans-serif; color:var(--muted); white-space:nowrap; text-align:right;}
+
+  .bench{margin-top:26px;}
+  .bench h3{font-family:'Space Grotesk', sans-serif; font-size:14px; margin:0 0 4px; color:var(--muted); font-weight:600;}
+  .bench .src{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .bench-track{position:relative; height:56px; background:var(--paper-raised); border:1px solid var(--line);}
+  .bench-fill{position:absolute; top:0; bottom:0; background:rgba(217,83,30,0.16); border-left:2px solid var(--heat); border-right:2px solid var(--heat);}
+  .bench-mark{position:absolute; top:0; bottom:0; width:1px; background:var(--network);}
+  .bench-mark .mlabel{position:absolute; top:-18px; left:0; transform:translateX(-50%); font-size:10.5px; color:var(--network); white-space:nowrap; font-family:'Space Grotesk', sans-serif;}
+  .bench-scale{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px; font-family:'Space Grotesk', sans-serif;}
+  .bench-legend{font-size:12px; color:var(--muted); margin-top:14px; line-height:1.6;}
+  .bench-legend b{color:var(--ink);}
+
+  .restart{margin-top:28px; text-align:center;}
+  .restart button{font-family:'Space Grotesk', sans-serif; font-size:13px; background:none; border:none; color:var(--network); text-decoration:underline; cursor:pointer; padding:8px;}
+
+  .disclaimer{margin-top:26px; font-size:11.5px; color:var(--muted); line-height:1.6; border-top:1px solid var(--line); padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="masthead">
+    <div class="kicker">Quickscan · MT-warmtenet</div>
+    <h1>Wat kost het binnenshuis?</h1>
+    <p>De vragen passen zich aan op basis van je woningtype. Excl. aansluitset, installatie daarvan en het traject buiten de woning.</p>
+  </div>
+
+  <div class="pipeline" id="pipeline"></div>
+
+  <div class="card" style="padding:20px;">
+
+    <div class="step" data-key="woningtype">
+      <div class="step-label"></div>
+      <h2>Wat voor woning is het?</h2>
+      <div class="options" data-q="woningtype">
+        <button class="opt" data-min="0" data-max="0" data-choice="eengezins"><span class="txt">Eengezinswoning</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="0" data-max="0" data-choice="bovenbeneden"><span class="txt">Boven- of benedenwoning (gesplitst pand)</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="0" data-max="0" data-choice="appartement"><span class="txt">Appartement (portiek/galerij, gedeelde opgang)</span><span class="amt">€0</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="appsubtype">
+      <div class="step-label"></div>
+      <h2>Heeft de woning een eigen cv-ketel, of is er een collectief systeem?</h2>
+      <p class="hint">Bepaalt of we straks vragen naar de eigen gasleiding, of naar de aansluiting op het gezamenlijke systeem.</p>
+      <div class="options" data-q="appsubtype">
+        <button class="opt" data-min="0" data-max="0" data-choice="eigen" data-flag=""><span class="txt">Eigen cv-ketel in de woning</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="0" data-max="0" data-choice="collectief" data-flag="collectief"><span class="txt">Collectief systeem (blokverwarming / VvE-ketel)</span><span class="amt">€0</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="toegang">
+      <div class="step-label"></div>
+      <h2>Kan de leiding via je eigen gevel of kelder naar binnen?</h2>
+      <p class="hint">Relevant bij gesplitste panden (bijv. vooroorlogse zwart-rood woningen in Haarlem), waar de boven- en benedenwoning apart eigendom zijn.</p>
+      <details class="info">
+        <summary>Hoe bepaal ik dit?</summary>
+        <div class="body">
+          <p>Het gaat niet om of het pand gesplitst is, maar om of déze woning al een eigen, onafhankelijke doorvoer heeft vanaf de straat of gevel naar de eigen meterkast.</p>
+          <ul>
+            <li>Heeft de woning een <b>eigen opgang</b> (eigen voordeur of trap, los van de andere wooneenheid) <b>én</b> een <b>eigen gas- en wateraansluiting</b> (eigen meters, niet gedeeld)? Dat is een sterke aanwijzing dat er al een onafhankelijke doorvoer bestaat — de warmteleiding kan dan meestal dezelfde of een vergelijkbare route volgen, zonder door de andere woning.</li>
+            <li>Heeft de woning wel een eigen opgang, maar ligt de meterkast zelf in een <b>gedeelde ruimte</b> (bijv. gezamenlijk trappenhuis of berging)? Dan is er geen probleem met de andere woning, maar wel afstemming nodig met de VvE of medebewoners.</li>
+            <li>Lopen gas en water van déze woning nu al <b>via de andere wooneenheid</b> (bijv. door een gedeelde schacht in de benedenwoning)? Dan is de kans groot dat de warmteleiding dezelfde beperking heeft. Check dit bij de leidingen zelf of in de splitsingsakte.</li>
+          </ul>
+          <p>Is dat laatste het geval, dan is medewerking van de andere eigenaar nodig — vaak vastgelegd via een erfdienstbaarheid, recht van opstal, of afspraak in de VvE-akte. Verderop vragen we naar het tracé van de gasleiding — die geeft dan meteen een indicatie van de lengte.</p>
+        </div>
+      </details>
+      <div class="options" data-q="toegang" data-flag-group="true">
+        <button class="opt" data-min="0" data-max="0" data-flag=""><span class="txt">Eigen opgang én eigen gas-/wateraansluiting</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="500" data-max="1500" data-flag=""><span class="txt">Eigen opgang, maar meterkast in gedeelde ruimte</span><span class="amt">+€500 – €1.500</span></button>
+        <button class="opt" data-min="2000" data-max="6000" data-flag="split"><span class="txt">Gas/water lopen nu al via de andere wooneenheid</span><span class="amt">+€2.000 – €6.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="gedeelde">
+      <div class="step-label"></div>
+      <h2>Is de gedeelde leiding door het pand bruikbaar?</h2>
+      <details class="info">
+        <summary>Hoe weet ik of er een nieuwe leiding nodig is?</summary>
+        <div class="body">
+          <p>Appartementen boven elkaar delen vaak één verticale leiding die van de kelder of meterkast helemaal naar boven loopt, met op elke verdieping een aftakking naar de woningen. Controleer twee dingen aan een zichtbaar stuk ervan (meestal in de meterkast of een kastje per verdieping):</p>
+          <ul>
+            <li><b>Materiaal:</b> lood of verzinkt staal (dof grijs, vaak vóór ~1975 toegepast) is vrijwel altijd afgekeurd voor hergebruik. Koper of kunststof (PE-X) is meestal geschikt.</li>
+            <li><b>Diameter:</b> meet de buitendiameter bij een zichtbaar stuk leiding. Vuistregel: ≥28 mm koper is doorgaans voldoende; 22 mm is een grensgeval afhankelijk van het aantal woningen dat erop aangesloten is; ≤15 mm is vrijwel zeker te krap.</li>
+          </ul>
+          <p>Geen van beide zelf te controleren? Vraag het installatierapport of de onderhoudstekening op bij de VvE, of laat een installateur één inspectiepunt openen.</p>
+        </div>
+      </details>
+      <div class="options" data-q="gedeelde">
+        <button class="opt" data-min="500" data-max="2000"><span class="txt">Koper/kunststof, ≥28 mm, na ~1975 aangelegd</span><span class="amt">€500 – €2.000</span></button>
+        <button class="opt" data-min="3000" data-max="10000"><span class="txt">Lood/staal, &lt;22 mm, of niet te controleren</span><span class="amt">€3.000 – €10.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="bouwjaar">
+      <div class="step-label"></div>
+      <h2>Wat is het bouwjaar?</h2>
+      <details class="info">
+        <summary>Waarom telt dit zo zwaar mee?</summary>
+        <div class="body">
+          <p>Bij woningen van vóór ~1994 is de kans op asbesthoudende materialen (leidingisolatie, vloerbedekking achter de ketel, brandwerende platen in schachten) aanzienlijk. Dat vereist een inventarisatie vooraf en eventueel gecertificeerde verwijdering, wat in eerdere kostenramingen structureel werd onderschat.</p>
+        </div>
+      </details>
+      <div class="options" data-q="bouwjaar">
+        <button class="opt" data-min="0" data-max="0" data-flag=""><span class="txt">Na 2000</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="500" data-max="1500" data-flag=""><span class="txt">1975 – 2000</span><span class="amt">€500 – €1.500</span></button>
+        <button class="opt" data-min="1500" data-max="4000" data-flag="asbest"><span class="txt">1945 – 1975</span><span class="amt">€1.500 – €4.000</span></button>
+        <button class="opt" data-min="3000" data-max="7000" data-flag="asbest"><span class="txt">Vóór 1945</span><span class="amt">€3.000 – €7.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="ketel">
+      <div class="step-label"></div>
+      <h2>Waar hangt de huidige cv-ketel?</h2>
+      <div class="options" data-q="ketel">
+        <button class="opt" data-min="0" data-max="500" data-meters="1"><span class="txt">Meterkast / entree</span><span class="amt">€0 – €500</span></button>
+        <button class="opt" data-min="500" data-max="1500" data-meters="3"><span class="txt">Begane grond</span><span class="amt">€500 – €1.500</span></button>
+        <button class="opt" data-min="1500" data-max="3000" data-meters="6"><span class="txt">1e verdieping</span><span class="amt">€1.500 – €3.000</span></button>
+        <button class="opt" data-min="3000" data-max="6000" data-meters="10"><span class="txt">Zolder</span><span class="amt">€3.000 – €6.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="aansluiting">
+      <div class="step-label"></div>
+      <h2>Waar komt de warmtenetaansluiting binnen?</h2>
+      <div class="options" data-q="aansluiting">
+        <button class="opt" data-min="0" data-max="0" data-meters="0"><span class="txt">Zelfde ruimte als cv-ketel / afleverset</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="500" data-max="1500" data-meters="2"><span class="txt">Zelfde verdieping</span><span class="amt">€500 – €1.500</span></button>
+        <button class="opt" data-min="1500" data-max="4000" data-meters="4"><span class="txt">Andere verdieping</span><span class="amt">€1.500 – €4.000</span></button>
+        <button class="opt" data-min="3000" data-max="6000" data-meters="8"><span class="txt">Voordeur, terwijl ketel op zolder hangt</span><span class="amt">€3.000 – €6.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="diameter">
+      <div class="step-label"></div>
+      <h2>Diameter van de heen- en retourleiding?</h2>
+      <p class="hint">Elk verwarmingssysteem heeft twee buizen: één die warm water náár de radiatoren brengt (heen), en één die het afgekoelde water weer terugbrengt (retour). Hier gaat het om de dikte van dat buizenpaar tussen meterkast en ketel.</p>
+      <details class="info">
+        <summary>Moet ik overal in huis de diameter opmeten?</summary>
+        <div class="body">
+          <p>Nee. Meet op twee plekken:</p>
+          <ul>
+            <li>Direct bij de <b>ketelaansluiting</b> (of bij de eerste afsluiter na de meterkast) — dit is meestal het smalste punt van het hele net.</li>
+            <li>Bij het <b>verst gelegen aftappunt of de laatste radiator</b> in de route.</li>
+          </ul>
+          <p>Is de diameter op beide plekken gelijk, of neemt hij logisch af richting het eindpunt? Dan is dat representatief en hoef je niet overal te meten. Wijkt een tussenliggend stuk onverwacht af, meet dan ook daar — dat is vaak het knelpunt.</p>
+          <p>Vuistregel voor koperen leiding, op basis van het vermogen dat erdoorheen moet:</p>
+          <ul>
+            <li><b>15 mm</b> — tot ~3-4 kW, aansluiting van één radiator</li>
+            <li><b>18 mm</b> — tot ~6-8 kW, aftakking naar een paar radiatoren</li>
+            <li><b>22 mm</b> — tot ~12-15 kW, hoofdleiding in een gemiddelde woning</li>
+            <li><b>28 mm of dikker</b> — grotere leiding die meerdere woningen voedt</li>
+          </ul>
+          <p><b>≥22 mm koper</b> op het hoofdtracé is doorgaans voldoende. Kleiner, of lood/staal, betekent vrijwel zeker vervangen.</p>
+        </div>
+      </details>
+      <div class="options" data-q="diameter">
+        <button class="opt" data-min="0" data-max="0"><span class="txt">≥22 mm koper/kunststof, in orde</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="800" data-max="2500"><span class="txt">15 – 22 mm, deels vervangen</span><span class="amt">€800 – €2.500</span></button>
+        <button class="opt" data-min="2500" data-max="6000"><span class="txt">&lt;15 mm, lood/staal, of onbekend</span><span class="amt">€2.500 – €6.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="gasleiding">
+      <div class="step-label"></div>
+      <h2>Hoe ligt de bestaande gasleiding erbij?</h2>
+      <p class="hint">Loop de gasleiding na van de meter tot de cv-ketel. Dat tracé volgt de nieuwe leiding meestal vrij nauwkeurig, dus dit gebruiken we straks automatisch bij de laatste vraag.</p>
+      <div class="slider-row">
+        <label>Lengte, meter tot cv-ketel <span class="val" id="gasVal">nog niet ingevuld</span></label>
+        <input type="range" id="gasSlider" min="0" max="30" step="1" value="0">
+      </div>
+      <div class="select-row">
+        <label>Hoe bereikbaar ligt hij?</label>
+        <select id="gasZichtbaarheid">
+          <option value="">Nog niet beoordeeld</option>
+          <option value="40-75">Open en zichtbaar (bijv. langs de plint of in de meterkast)</option>
+          <option value="60-100">In een kruipruimte</option>
+          <option value="75-125">In een koof of schacht</option>
+          <option value="125-250">Weggewerkt achter afgewerkte wanden/vloeren</option>
+          <option value="250-500">Alleen bereikbaar via hak- en breekwerk</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="step" data-key="vloerverwarming">
+      <div class="step-label"></div>
+      <h2>Is er vloerverwarming?</h2>
+      <p class="hint">Check de verdeler (kastje met meerdere kranen) in een kast, meterkast of onder de trap.</p>
+      <div class="options" data-q="vloerverwarming">
+        <button class="opt" data-min="0" data-max="0"><span class="txt">Nee, alleen radiatoren</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="-2500" data-max="-500"><span class="txt">Alleen begane grond</span><span class="amt">−€500 – −€2.500</span></button>
+        <button class="opt" data-min="-5000" data-max="-2000"><span class="txt">Hele woning</span><span class="amt">−€2.000 – −€5.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="radiatoren">
+      <div class="step-label"></div>
+      <h2>Hoeveel radiatoren moeten mogelijk vervangen worden?</h2>
+      <p class="hint" id="hintRadiatoren" style="display:none;"></p>
+      <details class="info">
+        <summary>Wanneer vervang je een radiator eigenlijk?</summary>
+        <div class="body">
+          <p>Een MT-warmtenet levert doorgaans water van <b>70–90°C</b> aan — vergelijkbaar met een gewone cv-ketel. De meeste bestaande radiatoren zijn daardoor qua vermogen gewoon toereikend; dit is anders dan bij een overstap naar een warmtepomp (LT), waar bijna alles vervangen moet worden.</p>
+          <p>Loop per ruimte langs en vervang alleen bij:</p>
+          <ul>
+            <li>Zichtbare <b>corrosie, lekkage of roestvorming</b> bij de aansluitingen.</li>
+            <li>Een radiator die <b>nu al</b> de ruimte niet warm krijgt bij volledig open kraan.</li>
+            <li><b>Enkelvoudige radiatoren (type 10, geen convectorribben)</b> in een ruimte die je op lagere aanvoertemperatuur wilt laten draaien voor efficiëntie.</li>
+            <li>Radiatoren zonder thermostaatkraan, als de afleverset dat vereist.</li>
+          </ul>
+          <p>Tel het aantal ruimtes dat aan één of meer van deze punten voldoet — dat is je aantal.</p>
+        </div>
+      </details>
+      <div class="options" data-q="radiatoren">
+        <button class="opt" data-min="0" data-max="0"><span class="txt">Geen</span><span class="amt">€0</span></button>
+        <button class="opt" data-min="800" data-max="2000"><span class="txt">1 – 2 stuks</span><span class="amt">€800 – €2.000</span></button>
+        <button class="opt" data-min="2000" data-max="4000"><span class="txt">3 – 4 stuks</span><span class="amt">€2.000 – €4.000</span></button>
+        <button class="opt" data-min="4000" data-max="7500"><span class="txt">5 of meer</span><span class="amt">€4.000 – €7.500</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="route">
+      <div class="step-label"></div>
+      <h2>Is er een bruikbare schacht of leidingroute?</h2>
+      <p class="hint" id="hintRoute">Bij een gesplitst pand telt hier de route ván het aansluitpunt náár jouw meterkast — vaak via kruipruimte of langs een gemeenschappelijke muur.</p>
+      <div class="options" data-q="route">
+        <button class="opt" data-min="0" data-max="1000"><span class="txt">Bestaande schacht</span><span class="amt">€0 – €1.000</span></button>
+        <button class="opt" data-min="500" data-max="1500"><span class="txt">Kruipruimte beschikbaar</span><span class="amt">€500 – €1.500</span></button>
+        <button class="opt" data-min="2000" data-max="5000"><span class="txt">Route via woonruimtes</span><span class="amt">€2.000 – €5.000</span></button>
+        <button class="opt" data-min="4000" data-max="8000"><span class="txt">Veel hak- en breekwerk</span><span class="amt">€4.000 – €8.000</span></button>
+      </div>
+    </div>
+
+    <div class="step" data-key="leidingwerk">
+      <div class="step-label"></div>
+      <h2>Extra leidingwerk nodig?</h2>
+      <p class="hint" id="hintLeidingwerk">Vuistregel: meet de bestaande gasleiding van meter tot cv-ketel op. De nieuwe leiding volgt meestal een vergelijkbaar tracé, dus dat aantal meter is een goed startpunt.</p>
+      <div class="slider-row">
+        <label>Aantal meter <span class="val" id="metersVal">0 m¹</span></label>
+        <input type="range" id="metersSlider" min="0" max="30" step="1" value="0">
+      </div>
+      <div class="select-row">
+        <label>Moeilijkheidsgraad</label>
+        <select id="moeilijkheid">
+          <option value="40-75">Open zichtbaar tracé — €40–75 per m¹</option>
+          <option value="60-100">Kruipruimte — €60–100 per m¹</option>
+          <option value="75-125">Koof of schacht — €75–125 per m¹</option>
+          <option value="125-250">Door afgewerkte woning — €125–250 per m¹</option>
+          <option value="250-500">Complex monumentaal werk — €250–500 per m¹</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="step result" data-key="result">
+      <h2>Geschatte inpandige kosten</h2>
+      <div class="sub">Op basis van je antwoorden, inclusief onvoorzien-correctie</div>
+
+      <div class="estimate">
+        <div class="tag">Indicatieve bandbreedte</div>
+        <div class="range" id="finalRange">€0 – €0</div>
+        <div class="note">Bevat een correctie van +20% t.o.v. de ruwe optelling van kengetallen, voor onvoorziene kosten en arbeidskosten die in eerdere ramingen structureel te laag werden ingeschat.</div>
+      </div>
+
+      <div class="flags" id="flagsWrap"></div>
+
+      <div class="breakdown">
+        <h3>Opbouw</h3>
+        <div id="bdList"></div>
+      </div>
+
+      <div class="bench">
+        <h3>Vergelijking met praktijkdata</h3>
+        <div class="src">CE Delft, validatie inpandige kosten warmtenet, gemeente Utrecht (2026) — vergelijking Amsterdam / Rotterdam / Utrecht</div>
+        <div class="bench-track" id="benchTrack"></div>
+        <div class="bench-scale"><span>€0</span><span>€30.000</span></div>
+        <div class="bench-legend">
+          <div><b>€13.500</b> — Amsterdam, ondergrens hoogstedelijk gebied</div>
+          <div><b>€16.600</b> — realistisch gemiddelde (CE Delft-advies)</div>
+          <div><b>€19.600</b> — Rotterdam, gemiddelde uitgevoerde projecten</div>
+          <div><b>€25.300</b> — Rotterdam, grondgebonden woningen (bovengrens)</div>
+        </div>
+      </div>
+
+      <div class="restart"><button id="restartBtn">↺ Opnieuw beginnen</button></div>
+
+      <div class="disclaimer">
+        Dit is een quickscan voor een grove ordegrootte, geen offerte. Werkelijke kosten hangen af van bouwkundige inspectie, asbestinventarisatie en de specifieke situatie ter plaatse. Excl. aansluitset, installatie daarvan en werkzaamheden buiten de woning.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav" id="navBar">
+    <button class="ghost" id="backBtn">← Terug</button>
+    <div class="running">Subtotaal<span class="num" id="runningTotal">€0 – €0</span></div>
+    <button class="primary" id="nextBtn">Volgende →</button>
+  </div>
+
+</div>
+
+<script>
+  const answers = {};
+  const activeFlags = new Set();
+  let sequence = ['woningtype'];
+  let pos = 0;
+  let metersInitialized = false;
+  let gasMeters = 0;
+  let gasMetersSet = false;
+  let gasDifficulty = '';
+
+  function computeSequence(){
+    const wt = answers.woningtype ? answers.woningtype.choice : undefined;
+    const sub = answers.appsubtype ? answers.appsubtype.choice : undefined;
+    const isAppartement = wt === 'appartement';
+    const isCollectief = isAppartement && sub === 'collectief';
+    const seq = ['woningtype'];
+    if(isAppartement) seq.push('appsubtype');
+    if(wt === 'bovenbeneden') seq.push('toegang');
+    if(isAppartement) seq.push('gedeelde');
+    seq.push('bouwjaar');
+    if(!isCollectief) seq.push('ketel');
+    seq.push('aansluiting');
+    if(!isCollectief) seq.push('diameter');
+    if(!isCollectief) seq.push('gasleiding');
+    seq.push('vloerverwarming');
+    seq.push('radiatoren');
+    seq.push('route');
+    seq.push('leidingwerk');
+    return seq;
+  }
+
+  function rebuildPipeline(){
+    const pipeline = document.getElementById('pipeline');
+    pipeline.innerHTML = '';
+    for(let i=0;i<sequence.length;i++){
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      if(i < pos) seg.classList.add('done');
+      else if(i === pos) seg.classList.add('current');
+      pipeline.appendChild(seg);
+    }
+  }
+
+  function currentKey(){ return sequence[pos]; }
+
+  function applyDifferentiation(key){
+    if(key==='radiatoren'){
+      const hint = document.getElementById('hintRadiatoren');
+      const vw = answers.vloerverwarming;
+      if(vw && vw.max <= -2000){
+        hint.style.display='block';
+        hint.textContent = 'Je gaf aan dat de hele woning vloerverwarming heeft — dan verwacht je hier meestal maar enkele of geen radiatoren meer, tenzij er nog een losse ruimte op radiatoren staat.';
+      } else if(vw && vw.max < 0){
+        hint.style.display='block';
+        hint.textContent = 'Je gaf aan dat alleen de begane grond vloerverwarming heeft — tel hier vooral de radiatoren op de verdieping(en) erboven.';
+      } else {
+        hint.style.display='none';
+      }
+    }
+    if(key==='route'){
+      const hint = document.getElementById('hintRoute');
+      if(activeFlags.has('split')){
+        hint.textContent = 'Je gaf aan dat gas en water nu via de andere wooneenheid lopen — gebruik hetzelfde tracé als uitgangspunt en tel hier de route via die buren mee, niet alleen het stuk binnen je eigen woning.';
+      } else {
+        hint.textContent = 'Bij een gesplitst pand telt hier de route ván het aansluitpunt náár jouw meterkast — vaak via kruipruimte of langs een gemeenschappelijke muur.';
+      }
+    }
+    if(key==='leidingwerk' && !metersInitialized){
+      const hint = document.getElementById('hintLeidingwerk');
+      const isCollectief = activeFlags.has('collectief');
+      let suggestion, source;
+      if(gasMetersSet){
+        suggestion = gasMeters + (activeFlags.has('split') ? 4 : 0);
+        source = 'de gasleiding die je hebt ingevuld (~'+gasMeters+' m)'+(activeFlags.has('split') ? ', plus een marge voor de route via de andere wooneenheid' : '');
+      } else if(isCollectief){
+        const aansluitM = answers.aansluiting ? getMetersAttr('aansluiting') : 0;
+        suggestion = aansluitM;
+        source = 'de locatie van de aansluiting — bij een collectief systeem is er geen eigen gasleiding als referentie, dus schat dit gerust zelf preciezer in';
+      } else {
+        const ketelM = answers.ketel ? getMetersAttr('ketel') : 0;
+        const aansluitM = answers.aansluiting ? getMetersAttr('aansluiting') : 0;
+        suggestion = ketelM + aansluitM + (activeFlags.has('split') ? 4 : 0);
+        source = 'je eerdere antwoorden (locatie ketel, locatie aansluiting'+(activeFlags.has('split')?', route via de andere wooneenheid':'')+')';
+      }
+      suggestion = Math.min(30, suggestion);
+      let difficultyNote = '';
+      if(gasDifficulty){
+        moeilijkheid.value = gasDifficulty;
+        difficultyNote = ' en de moeilijkheidsgraad is overgenomen op basis van hoe je de gasleiding beoordeelde';
+      }
+      if(suggestion > 0 || gasDifficulty){
+        metersSlider.value = suggestion;
+        updateMetersAnswer();
+        hint.textContent = 'Op basis van '+source+' is de schuif alvast op ongeveer '+suggestion+' meter gezet'+difficultyNote+' — pas dit gerust aan.';
+      }
+      metersInitialized = true;
+    }
+  }
+
+  function getMetersAttr(q){
+    const group = document.querySelector('.options[data-q="'+q+'"]');
+    const selected = group ? group.querySelector('.opt.selected') : null;
+    return selected ? parseFloat(selected.dataset.meters || 0) : 0;
+  }
+
+  function renderStep(){
+    const key = currentKey();
+    document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+    document.querySelector('.step[data-key="'+key+'"]').classList.add('active');
+    const labelEl = document.querySelector('.step[data-key="'+key+'"] .step-label');
+    if(labelEl) labelEl.textContent = 'Vraag '+(pos+1)+' van '+sequence.length;
+    document.getElementById('backBtn').disabled = (pos===0);
+    document.getElementById('navBar').style.display='flex';
+    const nextBtn = document.getElementById('nextBtn');
+    nextBtn.textContent = (key==='leidingwerk') ? 'Bereken →' : 'Volgende →';
+    nextBtn.disabled = !canAdvance(key);
+    applyDifferentiation(key);
+    rebuildPipeline();
+    updateRunning();
+  }
+
+  function canAdvance(key){
+    if(key==='gasleiding' || key==='leidingwerk') return true;
+    return answers[key] !== undefined;
+  }
+
+  document.querySelectorAll('.options').forEach(group=>{
+    const q = group.getAttribute('data-q');
+    group.querySelectorAll('.opt').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        group.querySelectorAll('.opt').forEach(b=>{b.classList.remove('selected');});
+        btn.classList.add('selected');
+        answers[q] = {min: parseFloat(btn.dataset.min), max: parseFloat(btn.dataset.max)};
+        if(btn.dataset.choice) answers[q].choice = btn.dataset.choice;
+
+        group.querySelectorAll('.opt').forEach(b=>{ if(b.dataset.flag) activeFlags.delete(b.dataset.flag); });
+        if(btn.dataset.flag) activeFlags.add(btn.dataset.flag);
+
+        updateRunning();
+        document.getElementById('nextBtn').disabled = false;
+        setTimeout(()=>{ goNext(); }, 220);
+      });
+    });
+  });
+
+  const metersSlider = document.getElementById('metersSlider');
+  const metersVal = document.getElementById('metersVal');
+  const moeilijkheid = document.getElementById('moeilijkheid');
+
+  const gasSlider = document.getElementById('gasSlider');
+  const gasVal = document.getElementById('gasVal');
+  gasSlider.addEventListener('input', ()=>{
+    gasMeters = parseInt(gasSlider.value,10);
+    gasMetersSet = true;
+    gasVal.textContent = gasMeters + ' m¹';
+  });
+
+  const gasZichtbaarheid = document.getElementById('gasZichtbaarheid');
+  gasZichtbaarheid.addEventListener('change', ()=>{
+    gasDifficulty = gasZichtbaarheid.value;
+  });
+
+  function updateMetersAnswer(){
+    const m = parseInt(metersSlider.value,10);
+    metersVal.textContent = m + ' m¹';
+    const [lo,hi] = moeilijkheid.value.split('-').map(Number);
+    answers['leidingwerk'] = {min: m*lo, max: m*hi};
+    updateRunning();
+  }
+  metersSlider.addEventListener('input', updateMetersAnswer);
+  moeilijkheid.addEventListener('change', updateMetersAnswer);
+  updateMetersAnswer();
+
+  function rawTotals(){
+    let min=0, max=0;
+    Object.values(answers).forEach(v=>{ min+=v.min; max+=v.max; });
+    return {min, max};
+  }
+  function fmt(n){
+    n = Math.round(n/50)*50;
+    return '€' + n.toLocaleString('nl-NL');
+  }
+  function updateRunning(){
+    const t = rawTotals();
+    const buffered = {min: t.min*1.2, max: t.max*1.2};
+    const el = document.getElementById('runningTotal');
+    if(el) el.textContent = fmt(buffered.min) + ' – ' + fmt(buffered.max);
+  }
+
+  function goNext(){
+    sequence = computeSequence();
+    if(pos >= sequence.length - 1){
+      document.getElementById('navBar').style.display='none';
+      document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+      document.querySelector('.step[data-key="result"]').classList.add('active');
+      renderResult();
+      return;
+    }
+    pos++;
+    renderStep();
+  }
+  function goBack(){
+    if(pos===0) return;
+    pos--;
+    sequence = computeSequence();
+    renderStep();
+  }
+  document.getElementById('nextBtn').addEventListener('click', ()=>{ if(canAdvance(currentKey())) goNext(); });
+  document.getElementById('backBtn').addEventListener('click', goBack);
+
+  const labels = {
+    woningtype:'Type woning',
+    appsubtype:'Verwarmingssysteem',
+    toegang:'Toegankelijkheid aansluiting',
+    gedeelde:'Gedeelde leiding (materiaal/diameter)',
+    bouwjaar:'Bouwjaar',
+    ketel:'Locatie cv-ketel',
+    aansluiting:'Locatie aansluiting',
+    diameter:'Diameter heen-/retourleiding',
+    vloerverwarming:'Vloerverwarming',
+    radiatoren:'Radiatoren vervangen',
+    route:'Leidingroute',
+    leidingwerk:'Extra leidingwerk'
+  };
+
+  const flagText = {
+    split: {
+      title:'Juridisch/sociaal risico: aansluiting via andere wooneenheid',
+      body:'Deze route vereist medewerking van de eigenaar van de andere wooneenheid — bijvoorbeeld via een recht van opstal, erfdienstbaarheid, of afspraak in de splitsingsakte. Reken naast de genoemde kosten op extra doorlooptijd voor het juridische traject, en op een reëel risico dat het project vertraagt of vastloopt zonder overeenstemming tussen de eigenaren.'
+    },
+    asbest: {
+      title:'Procedureel risico: asbestinventarisatie nodig',
+      body:'Bij dit bouwjaar is de kans op asbesthoudende materialen (leidingisolatie, vloerbedekking achter de ketel, brandwerende platen) aanzienlijk. Plan een asbestinventarisatie vóór de start van de werkzaamheden — dit kost doorlooptijd en kan, als er iets wordt aangetroffen, tot een aparte saneringspost leiden bovenop het bedrag hierboven.'
+    },
+    collectief: {
+      title:'Let op: collectief systeem valt deels buiten deze quickscan',
+      body:'Bij een collectief systeem (blokverwarming of een gezamenlijke VvE-ketel) is de vervanging van de centrale installatie een aparte, vaak VvE-brede kostenpost die hier niet in is meegenomen. Deze schatting dekt alleen de aanpassingen ín jouw eigen woning, zoals de radiatoren en eventueel een nieuwe afleverset.'
+    }
+  };
+
+  function renderResult(){
+    const t = rawTotals();
+    const buffered = {min: Math.max(0,t.min*1.2), max: Math.max(0,t.max*1.2)};
+    document.getElementById('finalRange').textContent = fmt(buffered.min) + ' – ' + fmt(buffered.max);
+
+    const flagsWrap = document.getElementById('flagsWrap');
+    flagsWrap.innerHTML = '';
+    activeFlags.forEach(f=>{
+      const info = flagText[f];
+      if(!info) return;
+      const div = document.createElement('div');
+      div.className = 'flag';
+      div.innerHTML = '<b>'+info.title+'</b>'+info.body;
+      flagsWrap.appendChild(div);
+    });
+
+    const bd = document.getElementById('bdList');
+    bd.innerHTML = '';
+    Object.keys(labels).forEach(k=>{
+      if(answers[k]===undefined) return;
+      const v = answers[k];
+      const row = document.createElement('div');
+      row.className = 'bd-row';
+      row.innerHTML = '<span class="lbl">'+labels[k]+'</span><span class="v">'+fmt(v.min)+' – '+fmt(v.max)+'</span>';
+      bd.appendChild(row);
+    });
+    const buffRow = document.createElement('div');
+    buffRow.className = 'bd-row';
+    buffRow.innerHTML = '<span class="lbl">Onvoorzien-correctie (+20%)</span><span class="v">'+fmt(t.min*0.2)+' – '+fmt(t.max*0.2)+'</span>';
+    bd.appendChild(buffRow);
+
+    const scaleMax = 30000;
+    const track = document.getElementById('benchTrack');
+    track.innerHTML = '';
+    const fill = document.createElement('div');
+    fill.className = 'bench-fill';
+    const left = Math.min(100, (buffered.min/scaleMax)*100);
+    const right = Math.min(100, (buffered.max/scaleMax)*100);
+    fill.style.left = left+'%';
+    fill.style.width = Math.max(0,(right-left))+'%';
+    track.appendChild(fill);
+
+    [{v:13500,l:"A'dam"},{v:16600,l:'Gem.'},{v:19600,l:"R'dam"},{v:25300,l:'Grondg.'}].forEach(m=>{
+      const mark = document.createElement('div');
+      mark.className='bench-mark';
+      mark.style.left = Math.min(100,(m.v/scaleMax)*100)+'%';
+      mark.innerHTML = '<span class="mlabel">'+m.l+'</span>';
+      track.appendChild(mark);
+    });
+  }
+
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    Object.keys(answers).forEach(k=> delete answers[k]);
+    activeFlags.clear();
+    document.querySelectorAll('.opt.selected').forEach(o=>o.classList.remove('selected'));
+    metersSlider.value = 0;
+    moeilijkheid.selectedIndex = 0;
+    updateMetersAnswer();
+    metersInitialized = false;
+    gasSlider.value = 0;
+    gasMeters = 0;
+    gasMetersSet = false;
+    gasVal.textContent = 'nog niet ingevuld';
+    gasZichtbaarheid.selectedIndex = 0;
+    gasDifficulty = '';
+    pos = 0;
+    sequence = ['woningtype'];
+    renderStep();
+  });
+
+  renderStep();
+</script>
+</body>
+</html>
