@@ -244,28 +244,30 @@
     <div class="step" data-key="ketel">
       <div class="step-label"></div>
       <h2>Waar hangt de huidige cv-ketel?</h2>
+      <p class="hint">Bepaalt alleen de geschatte leidinglengte voor de laatste vraag over leidingwerk — hier reken je nog geen apart bedrag toe.</p>
       <div class="options" data-q="ketel" id="ketelHuis">
-        <button class="opt" data-min="0" data-max="500" data-meters="1"><span class="txt">Meterkast / entree</span><span class="amt">€0 – €500</span></button>
-        <button class="opt" data-min="500" data-max="1500" data-meters="3"><span class="txt">Begane grond</span><span class="amt">€500 – €1.500</span></button>
-        <button class="opt" data-min="1500" data-max="3000" data-meters="6"><span class="txt">1e verdieping</span><span class="amt">€1.500 – €3.000</span></button>
-        <button class="opt" data-min="3000" data-max="6000" data-meters="10"><span class="txt">Zolder</span><span class="amt">€3.000 – €6.000</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="1"><span class="txt">Meterkast / entree</span><span class="amt">~1 m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="3"><span class="txt">Begane grond</span><span class="amt">~3 m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="6"><span class="txt">1e verdieping</span><span class="amt">~6 m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="10"><span class="txt">Zolder</span><span class="amt">~10 m¹</span></button>
       </div>
       <div class="options" data-q="ketel" id="ketelApp" style="display:none;">
-        <button class="opt" data-min="0" data-max="500" data-meters="1"><span class="txt">Zelfde ruimte als meterkast</span><span class="amt">€0 – €500</span></button>
-        <button class="opt" data-min="500" data-max="1500" data-meters="3"><span class="txt">Zelfde verdieping, andere ruimte</span><span class="amt">€500 – €1.500</span></button>
-        <button class="opt" data-min="1500" data-max="3000" data-meters="6"><span class="txt">Andere verdieping</span><span class="amt">€1.500 – €3.000</span></button>
-        <button class="opt" data-min="3000" data-max="6000" data-meters="10"><span class="txt">Andere verdieping, ver weg (bijv. via trappenhuis/schacht)</span><span class="amt">€3.000 – €6.000</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="1"><span class="txt">Zelfde ruimte als meterkast</span><span class="amt">~1 m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="3"><span class="txt">Zelfde verdieping, andere ruimte</span><span class="amt">~3 m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="6"><span class="txt">Andere verdieping</span><span class="amt">~6 m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="10"><span class="txt">Andere verdieping, ver weg (bijv. via trappenhuis/schacht)</span><span class="amt">~10 m¹</span></button>
       </div>
     </div>
 
     <div class="step" data-key="aansluiting">
       <div class="step-label"></div>
       <h2>Waar komt de warmtenetaansluiting binnen?</h2>
+      <p class="hint">Bepaalt samen met de vorige vraag de geschatte leidinglengte voor de laatste vraag over leidingwerk — hier reken je nog geen apart bedrag toe.</p>
       <div class="options" data-q="aansluiting">
-        <button class="opt" data-min="0" data-max="0" data-meters="0"><span class="txt">Zelfde ruimte als cv-ketel / afleverset</span><span class="amt">€0</span></button>
-        <button class="opt" data-min="500" data-max="1500" data-meters="2"><span class="txt">Zelfde verdieping</span><span class="amt">€500 – €1.500</span></button>
-        <button class="opt" data-min="1500" data-max="4000" data-meters="4"><span class="txt">Andere verdieping</span><span class="amt">€1.500 – €4.000</span></button>
-        <button class="opt" data-min="3000" data-max="6000" data-meters="8"><span class="txt">Voordeur, terwijl ketel op zolder hangt</span><span class="amt">€3.000 – €6.000</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="0"><span class="txt">Zelfde ruimte als cv-ketel / afleverset</span><span class="amt">0 m¹ extra</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="2"><span class="txt">Zelfde verdieping</span><span class="amt">~2 m¹ extra</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="4"><span class="txt">Andere verdieping</span><span class="amt">~4 m¹ extra</span></button>
+        <button class="opt" data-min="0" data-max="0" data-meters="8"><span class="txt">Voordeur, terwijl ketel op zolder hangt</span><span class="amt">~8 m¹ extra</span></button>
       </div>
     </div>
 
@@ -360,12 +362,12 @@
     <div class="step" data-key="route">
       <div class="step-label"></div>
       <h2>Is er een bruikbare schacht of leidingroute?</h2>
-      <p class="hint" id="hintRoute">Bij een gesplitst pand telt hier de route ván het aansluitpunt náár jouw meterkast — vaak via kruipruimte of langs een gemeenschappelijke muur.</p>
+      <p class="hint" id="hintRoute">Bij een gesplitst pand telt hier de route ván het aansluitpunt náár jouw meterkast — vaak via kruipruimte of langs een gemeenschappelijke muur. Bepaalt zelf geen apart bedrag, maar de moeilijkheidsgraad (prijs per meter) bij de laatste vraag over leidingwerk.</p>
       <div class="options" data-q="route">
-        <button class="opt" data-min="0" data-max="1000"><span class="txt">Bestaande schacht</span><span class="amt">€0 – €1.000</span></button>
-        <button class="opt" data-min="500" data-max="1500"><span class="txt">Kruipruimte beschikbaar</span><span class="amt">€500 – €1.500</span></button>
-        <button class="opt" data-min="2000" data-max="5000"><span class="txt">Route via woonruimtes</span><span class="amt">€2.000 – €5.000</span></button>
-        <button class="opt" data-min="4000" data-max="8000"><span class="txt">Veel hak- en breekwerk</span><span class="amt">€4.000 – €8.000</span></button>
+        <button class="opt" data-min="0" data-max="0" data-difficulty="75-125"><span class="txt">Bestaande schacht</span><span class="amt">€75 – €125 /m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-difficulty="60-100"><span class="txt">Kruipruimte beschikbaar</span><span class="amt">€60 – €100 /m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-difficulty="125-250"><span class="txt">Route via woonruimtes</span><span class="amt">€125 – €250 /m¹</span></button>
+        <button class="opt" data-min="0" data-max="0" data-difficulty="250-500"><span class="txt">Veel hak- en breekwerk</span><span class="amt">€250 – €500 /m¹</span></button>
       </div>
     </div>
 
@@ -511,10 +513,11 @@
     }
     if(key==='route'){
       const hint = document.getElementById('hintRoute');
+      const extra = ' Bepaalt zelf geen apart bedrag, maar de moeilijkheidsgraad (prijs per meter) bij de laatste vraag over leidingwerk.';
       if(activeFlags.has('split')){
-        hint.textContent = 'Je gaf aan dat gas en water nu via de andere wooneenheid lopen — gebruik hetzelfde tracé als uitgangspunt en tel hier de route via die buren mee, niet alleen het stuk binnen je eigen woning.';
+        hint.textContent = 'Je gaf aan dat gas en water nu via de andere wooneenheid lopen — gebruik hetzelfde tracé als uitgangspunt en tel hier de route via die buren mee, niet alleen het stuk binnen je eigen woning.'+extra;
       } else {
-        hint.textContent = 'Bij een gesplitst pand telt hier de route ván het aansluitpunt náár jouw meterkast — vaak via kruipruimte of langs een gemeenschappelijke muur.';
+        hint.textContent = 'Bij een gesplitst pand telt hier de route ván het aansluitpunt náár jouw meterkast — vaak via kruipruimte of langs een gemeenschappelijke muur.'+extra;
       }
     }
     if(key==='leidingwerk' && !metersInitialized){
@@ -535,12 +538,21 @@
         source = 'je eerdere antwoorden (locatie ketel, locatie aansluiting'+(activeFlags.has('split')?', route via de andere wooneenheid':'')+')';
       }
       suggestion = Math.min(30, suggestion);
+
+      const routeDifficulty = answers.route ? answers.route.difficulty : undefined;
+      let difficultyToUse = '';
       let difficultyNote = '';
       if(gasDifficulty){
-        moeilijkheid.value = gasDifficulty;
+        difficultyToUse = gasDifficulty;
         difficultyNote = ' en de moeilijkheidsgraad is overgenomen op basis van hoe je de gasleiding beoordeelde';
+      } else if(routeDifficulty){
+        difficultyToUse = routeDifficulty;
+        difficultyNote = ' en de moeilijkheidsgraad is overgenomen op basis van de leidingroute die je hebt aangegeven';
       }
-      if(suggestion > 0 || gasDifficulty){
+      if(difficultyToUse){
+        moeilijkheid.value = difficultyToUse;
+      }
+      if(suggestion > 0 || difficultyToUse){
         metersSlider.value = suggestion;
         updateMetersAnswer();
         hint.textContent = 'Op basis van '+source+' is de schuif alvast op ongeveer '+suggestion+' meter gezet'+difficultyNote+' — pas dit gerust aan.';
@@ -583,6 +595,7 @@
         btn.classList.add('selected');
         answers[q] = {min: parseFloat(btn.dataset.min), max: parseFloat(btn.dataset.max)};
         if(btn.dataset.choice) answers[q].choice = btn.dataset.choice;
+        if(btn.dataset.difficulty) answers[q].difficulty = btn.dataset.difficulty;
 
         group.querySelectorAll('.opt').forEach(b=>{ if(b.dataset.flag) activeFlags.delete(b.dataset.flag); });
         if(btn.dataset.flag) activeFlags.add(btn.dataset.flag);
@@ -665,12 +678,12 @@
     toegang:'Toegankelijkheid aansluiting',
     gedeelde:'Gedeelde leiding (materiaal/diameter)',
     bouwjaar:'Bouwjaar',
-    ketel:'Locatie cv-ketel',
-    aansluiting:'Locatie aansluiting',
+    ketel:'Locatie cv-ketel (bepaalt leidinglengte)',
+    aansluiting:'Locatie aansluiting (bepaalt leidinglengte)',
     diameter:'Diameter heen-/retourleiding',
     vloerverwarming:'Vloerverwarming',
     radiatoren:'Radiatoren vervangen',
-    route:'Leidingroute',
+    route:'Leidingroute (bepaalt prijs/m¹)',
     leidingwerk:'Extra leidingwerk'
   };
 
